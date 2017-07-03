@@ -209,6 +209,8 @@
         rect.size.height = 2;
         _progressView = [[UIProgressView alloc] initWithFrame:rect];
         [_progressView setProgressViewStyle:UIProgressViewStyleDefault]; //设置进度条类型
+        // 设置进度条颜色
+//        _progressView.progressTintColor = [UIColor redColor];
         [self.view addSubview:_progressView];
     }
     return _progressView;
