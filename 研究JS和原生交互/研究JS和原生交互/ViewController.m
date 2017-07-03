@@ -17,7 +17,7 @@
  */
 @interface ViewController ()<WKNavigationDelegate,WKUIDelegate,WKScriptMessageHandler>
 @property (nonatomic, strong) WKWebView *webView; ///< WKWebView
-
+@property (nonatomic, strong) UIProgressView *progressView; // 进度条
 @property (nonatomic, strong) UIView *bottomView; // 原生的View
 @end
 
@@ -25,6 +25,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    // 添加进度条观察者
+    [self.webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
+    
     // 加载H5页面
     NSURL *url = [[NSBundle mainBundle] URLForResource:@"index" withExtension:@"html"];
     NSURLRequest *urlRequest = [NSURLRequest requestWithURL:url];
@@ -138,6 +142,27 @@
     }];
 }
 
+#pragma mark ---进度条KVO---
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    // 进度条
+    if ([@"estimatedProgress" isEqualToString:keyPath]) {
+        NSLog(@"进度条数值==%f",self.webView.estimatedProgress);
+        [self.progressView setProgress:self.webView.estimatedProgress animated:YES];
+        // 初始和终止状态
+        if (self.progressView.progress == 0) {
+            self.progressView.hidden = YES;
+        }else if (self.progressView.progress == 1){
+            // 一秒后隐藏
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1), dispatch_get_main_queue(), ^{
+                
+                if (self.progressView.progress == 1) {
+                    self.progressView.progress = 0;
+                    self.progressView.hidden = YES;
+                }
+            });
+        }
+    }
+}
 
 #pragma mark ---懒加载---
 - (WKWebView *)webView {
@@ -174,6 +199,19 @@
         [_bottomView addSubview:btn];
     }
     return _bottomView;
+}
+
+- (UIProgressView *)progressView {
+    if (_progressView == nil) {
+        CGRect rect = CGRectZero;
+        rect.origin.y = self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height;
+        rect.size.width = KWidth;
+        rect.size.height = 2;
+        _progressView = [[UIProgressView alloc] initWithFrame:rect];
+        [_progressView setProgressViewStyle:UIProgressViewStyleDefault]; //设置进度条类型
+        [self.view addSubview:_progressView];
+    }
+    return _progressView;
 }
 
 @end
